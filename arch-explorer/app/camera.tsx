@@ -3,12 +3,13 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   ScrollView,
   Image,
 } from "react-native";
+import { CameraIcon, ImageIcon } from "phosphor-react-native";
 import { useImageConversation } from "../src/hooks/useImageConversation";
-import { ImageConversation } from "../src/components/ImageConversation";
+import { ImageConversation, LoadingView } from "../src/components";
+import { colors, fonts, cardStyle, primaryButtonStyle, primaryButtonDisabledStyle } from "../src/theme";
 
 export default function CameraScreen() {
   const { imageUri, result, loading, error, pickImage, captureImage, analyzeImage } =
@@ -25,11 +26,11 @@ export default function CameraScreen() {
 
       <View style={styles.buttonRow}>
         <Pressable style={styles.actionButton} onPress={captureImage}>
-          <Text style={styles.actionButtonIcon}>📷</Text>
+          <CameraIcon size={28} color={colors.accent} weight="light" />
           <Text style={styles.actionButtonText}>Take Photo</Text>
         </Pressable>
         <Pressable style={styles.actionButton} onPress={pickImage}>
-          <Text style={styles.actionButtonIcon}>🖼️</Text>
+          <ImageIcon size={28} color={colors.accent} weight="light" />
           <Text style={styles.actionButtonText}>Choose from Library</Text>
         </Pressable>
       </View>
@@ -40,20 +41,20 @@ export default function CameraScreen() {
         </View>
       )}
 
-      <Pressable
-        style={[
-          styles.analyzeButton,
-          (!imageUri || loading) && styles.analyzeButtonDisabled,
-        ]}
-        onPress={analyzeImage}
-        disabled={!imageUri || loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
+      {loading ? (
+        <LoadingView variant="analysis" />
+      ) : (
+        <Pressable
+          style={[
+            styles.analyzeButton,
+            (!imageUri || loading) && styles.analyzeButtonDisabled,
+          ]}
+          onPress={analyzeImage}
+          disabled={!imageUri || loading}
+        >
           <Text style={styles.analyzeButtonText}>Analyze Architecture</Text>
-        )}
-      </Pressable>
+        </Pressable>
+      )}
 
       <ImageConversation result={result} loading={loading} error={error} />
     </ScrollView>
@@ -63,7 +64,7 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.background,
   },
   content: {
     padding: 20,
@@ -73,14 +74,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
+    fontFamily: fonts.heading,
     fontSize: 28,
-    fontWeight: "800",
-    color: "#1a1a1a",
+    color: colors.textPrimary,
+    letterSpacing: 0.3,
     marginBottom: 4,
   },
   subtitle: {
+    fontFamily: fonts.body,
     fontSize: 15,
-    color: "#666",
+    color: colors.textTertiary,
   },
   buttonRow: {
     flexDirection: "row",
@@ -89,37 +92,22 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
+    ...cardStyle,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-  actionButtonIcon: {
-    fontSize: 28,
-    marginBottom: 8,
+    gap: 8,
   },
   actionButtonText: {
+    fontFamily: fonts.body,
     fontSize: 13,
-    fontWeight: "600",
-    color: "#333",
+    color: colors.textSecondary,
     textAlign: "center",
   },
   previewContainer: {
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
   },
   previewImage: {
     width: "100%",
@@ -127,18 +115,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   analyzeButton: {
-    backgroundColor: "#6366f1",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
+    ...primaryButtonStyle,
     marginBottom: 16,
   },
   analyzeButtonDisabled: {
-    backgroundColor: "#c7c8f9",
+    ...primaryButtonDisabledStyle,
   },
   analyzeButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
+    fontFamily: fonts.body,
+    color: colors.textOnAccent,
+    fontSize: 15,
+    letterSpacing: 0.5,
   },
 });

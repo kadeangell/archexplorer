@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from "react-native";
 import { BuildingImage } from "./BuildingImage";
 import type { ArchitecturalDetail } from "../types";
+import { colors, fonts, cardStyle } from "../theme";
 
 interface BuildingCardProps {
   building: ArchitecturalDetail;
@@ -21,10 +22,10 @@ export function BuildingCard({ building }: BuildingCardProps) {
       <Text style={styles.description}>{building.description}</Text>
       {building.notableFeatures.length > 0 && (
         <View style={styles.features}>
-          <Text style={styles.featuresLabel}>Notable Features:</Text>
+          <Text style={styles.featuresLabel}>Notable Features</Text>
           {building.notableFeatures.map((feature, i) => (
             <Text key={i} style={styles.feature}>
-              • {feature}
+              · {feature}
             </Text>
           ))}
         </View>
@@ -40,41 +41,38 @@ export function BuildingCard({ building }: BuildingCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
+    ...cardStyle,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   name: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1a1a1a",
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.textPrimary,
+    letterSpacing: 0.2,
     marginBottom: 4,
   },
   style: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    fontWeight: "600",
-    color: "#6366f1",
+    color: colors.accent,
     marginBottom: 4,
   },
   meta: {
+    fontFamily: fonts.body,
     fontSize: 13,
-    color: "#666",
+    color: colors.textTertiary,
     marginBottom: 4,
   },
   address: {
+    fontFamily: fonts.body,
     fontSize: 13,
-    color: "#888",
+    color: colors.textTertiary,
     marginBottom: 8,
   },
   description: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: "#333",
+    color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 8,
   },
@@ -82,23 +80,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   featuresLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#444",
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textTertiary,
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
   feature: {
+    fontFamily: fonts.body,
     fontSize: 13,
-    color: "#555",
+    color: colors.textSecondary,
     marginLeft: 8,
     lineHeight: 20,
   },
   significance: {
+    fontFamily: fonts.body,
     fontSize: 13,
     fontStyle: "italic",
-    color: "#666",
+    color: colors.textTertiary,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: colors.surfaceBorder,
     paddingTop: 8,
   },
 });

@@ -3,12 +3,13 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { BellIcon, BellSlashIcon, CameraIcon, CompassIcon } from "phosphor-react-native";
 import { useLocation, useArchitectureAgent, useNotificationPermissions } from "../src/hooks";
-import { LocationDisplay } from "../src/components";
+import { LocationDisplay, LoadingView } from "../src/components";
+import { colors, fonts, cardStyle, primaryButtonStyle, primaryButtonDisabledStyle, secondaryButtonStyle } from "../src/theme";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -48,28 +49,34 @@ export default function HomeScreen() {
         error={location.error}
       />
 
-      <Pressable
-        style={[
-          styles.exploreButton,
-          (!location.coordinates || architecture.loading) &&
-            styles.exploreButtonDisabled,
-        ]}
-        onPress={handleExplore}
-        disabled={!location.coordinates || architecture.loading}
-      >
-        {architecture.loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
+      {architecture.loading ? (
+        <LoadingView variant="architecture" />
+      ) : (
+        <Pressable
+          style={[
+            styles.exploreButton,
+            (!location.coordinates || architecture.loading) &&
+              styles.exploreButtonDisabled,
+          ]}
+          onPress={handleExplore}
+          disabled={!location.coordinates || architecture.loading}
+        >
+          <CompassIcon size={20} color={colors.textOnAccent} weight="regular" />
           <Text style={styles.exploreButtonText}>
             Explore Nearby Architecture
           </Text>
-        )}
-      </Pressable>
+        </Pressable>
+      )}
 
       <Pressable
         style={styles.secondaryButton}
         onPress={notifications.toggleNotifications}
       >
+        {notifications.notificationsEnabled ? (
+          <BellSlashIcon size={18} color={colors.accent} weight="regular" />
+        ) : (
+          <BellIcon size={18} color={colors.accent} weight="regular" />
+        )}
         <Text style={styles.secondaryButtonText}>
           {notifications.notificationsEnabled
             ? "Disable Notifications"
@@ -81,6 +88,7 @@ export default function HomeScreen() {
         style={styles.secondaryButton}
         onPress={() => router.push("/camera")}
       >
+        <CameraIcon size={18} color={colors.accent} weight="regular" />
         <Text style={styles.secondaryButtonText}>Analyze Photo</Text>
       </Pressable>
 
@@ -107,7 +115,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   content: {
     padding: 20,
@@ -117,73 +125,77 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#1a1a1a",
+    fontFamily: fonts.heading,
+    fontSize: 36,
+    color: colors.textPrimary,
+    letterSpacing: 0.5,
     marginBottom: 4,
   },
   subtitle: {
+    fontFamily: fonts.body,
     fontSize: 16,
-    color: "#666",
+    color: colors.textTertiary,
   },
   exploreButton: {
-    backgroundColor: "#6366f1",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
+    ...primaryButtonStyle,
+    flexDirection: "row",
+    gap: 10,
     marginBottom: 16,
   },
   exploreButtonDisabled: {
-    backgroundColor: "#c7c8f9",
+    ...primaryButtonDisabledStyle,
+  },
+  exploreButtonText: {
+    fontFamily: fonts.body,
+    color: colors.textOnAccent,
+    fontSize: 15,
+    letterSpacing: 0.5,
   },
   secondaryButton: {
-    borderWidth: 2,
-    borderColor: "#6366f1",
-    borderRadius: 12,
-    padding: 14,
-    alignItems: "center",
+    ...secondaryButtonStyle,
+    flexDirection: "row",
+    gap: 8,
     marginBottom: 12,
   },
   secondaryButtonText: {
-    color: "#6366f1",
+    fontFamily: fonts.body,
+    color: colors.accent,
     fontSize: 15,
-    fontWeight: "700",
-  },
-  exploreButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
+    letterSpacing: 0.5,
   },
   errorContainer: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.errorBg,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 115, 94, 0.25)',
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: "#ef4444",
+    fontFamily: fonts.body,
+    color: colors.error,
     fontSize: 14,
   },
   permissionNotice: {
-    backgroundColor: "#fffbeb",
-    borderRadius: 8,
-    padding: 16,
+    ...cardStyle,
     alignItems: "center",
   },
   permissionText: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: "#92400e",
+    color: colors.textSecondary,
     textAlign: "center",
     marginBottom: 12,
   },
   retryButton: {
-    backgroundColor: "#f59e0b",
-    borderRadius: 8,
+    ...primaryButtonStyle,
     paddingHorizontal: 20,
     paddingVertical: 10,
+    padding: undefined,
   },
   retryButtonText: {
-    color: "#fff",
-    fontWeight: "600",
+    fontFamily: fonts.body,
+    color: colors.textOnAccent,
+    letterSpacing: 0.5,
   },
 });

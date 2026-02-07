@@ -1,5 +1,7 @@
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import type { ImageConversationResult } from "../types";
+import { LoadingView } from "./LoadingView";
+import { colors, fonts, cardStyle } from "../theme";
 
 interface ImageConversationProps {
   result: ImageConversationResult | null;
@@ -9,12 +11,7 @@ interface ImageConversationProps {
 
 export function ImageConversation({ result, loading, error }: ImageConversationProps) {
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={styles.loadingText}>Analyzing architecture...</Text>
-      </View>
-    );
+    return <LoadingView variant="analysis" />;
   }
 
   if (error) {
@@ -54,7 +51,7 @@ export function ImageConversation({ result, loading, error }: ImageConversationP
           <Text style={styles.sectionLabel}>Notable Features</Text>
           {result.notableFeatures.map((feature, index) => (
             <View key={index} style={styles.featureItem}>
-              <Text style={styles.featureBullet}>{"\u2022"}</Text>
+              <Text style={styles.featureBullet}>{"\u00b7"}</Text>
               <Text style={styles.featureText}>{feature}</Text>
             </View>
           ))}
@@ -68,48 +65,35 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 16,
   },
-  loadingContainer: {
-    alignItems: "center",
-    padding: 32,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 15,
-    color: "#6366f1",
-    fontWeight: "600",
-  },
   errorContainer: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.errorBg,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 115, 94, 0.25)',
     padding: 12,
     marginTop: 16,
   },
   errorText: {
-    color: "#ef4444",
+    fontFamily: fonts.body,
+    color: colors.error,
     fontSize: 14,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
+    ...cardStyle,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#888",
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textTertiary,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginBottom: 8,
   },
   analysisText: {
+    fontFamily: fonts.body,
     fontSize: 15,
-    color: "#333",
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   badgeRow: {
@@ -119,39 +103,41 @@ const styles = StyleSheet.create({
   },
   badge: {
     flex: 1,
-    backgroundColor: "#eef2ff",
-    borderRadius: 12,
+    backgroundColor: colors.accentMuted,
+    borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#c7d2fe",
+    borderColor: 'rgba(202, 155, 83, 0.25)',
   },
   badgeLabel: {
+    fontFamily: fonts.body,
     fontSize: 11,
-    fontWeight: "600",
-    color: "#6366f1",
+    color: colors.accent,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
   badgeText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#4338ca",
+    fontFamily: fonts.heading,
+    fontSize: 16,
+    color: colors.textPrimary,
   },
   featureItem: {
     flexDirection: "row",
     marginBottom: 6,
   },
   featureBullet: {
+    fontFamily: fonts.body,
     fontSize: 15,
-    color: "#6366f1",
+    color: colors.accent,
     marginRight: 8,
     lineHeight: 22,
   },
   featureText: {
     flex: 1,
+    fontFamily: fonts.body,
     fontSize: 15,
-    color: "#333",
+    color: colors.textSecondary,
     lineHeight: 22,
   },
 });

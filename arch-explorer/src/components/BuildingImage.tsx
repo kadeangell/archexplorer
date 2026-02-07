@@ -2,10 +2,12 @@ import {
   View,
   Image,
   StyleSheet,
-  ActivityIndicator,
   Text,
 } from "react-native";
 import { useState } from "react";
+import { ImageIcon } from "phosphor-react-native";
+import { LoadingView } from "./LoadingView";
+import { colors, fonts } from "../theme";
 
 interface BuildingImageProps {
   imageUrl?: string;
@@ -19,6 +21,7 @@ export function BuildingImage({ imageUrl, buildingName }: BuildingImageProps) {
   if (!imageUrl) {
     return (
       <View style={styles.placeholder}>
+        <ImageIcon size={28} color={colors.textTertiary} weight="light" />
         <Text style={styles.placeholderText}>No image available</Text>
       </View>
     );
@@ -26,7 +29,11 @@ export function BuildingImage({ imageUrl, buildingName }: BuildingImageProps) {
 
   return (
     <View style={styles.container}>
-      {loading && <ActivityIndicator style={styles.loader} color="#6366f1" />}
+      {loading && (
+        <View style={styles.loaderOverlay}>
+          <LoadingView variant="general" message="Loading image\u2026" />
+        </View>
+      )}
       <Image
         source={{ uri: imageUrl }}
         style={[styles.image, error && styles.hidden]}
@@ -39,6 +46,7 @@ export function BuildingImage({ imageUrl, buildingName }: BuildingImageProps) {
       />
       {error && (
         <View style={styles.placeholder}>
+          <ImageIcon size={28} color={colors.textTertiary} weight="light" />
           <Text style={styles.placeholderText}>Image failed to load</Text>
         </View>
       )}
@@ -51,6 +59,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
   },
   image: {
     width: "100%",
@@ -59,25 +69,30 @@ const styles = StyleSheet.create({
   hidden: {
     display: "none",
   },
-  loader: {
+  loaderOverlay: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 1,
+    justifyContent: "center",
   },
   placeholder: {
     width: "100%",
     aspectRatio: 16 / 9,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: colors.surface,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
+    gap: 8,
   },
   placeholderText: {
-    color: "#9ca3af",
+    fontFamily: fonts.body,
+    color: colors.textTertiary,
     fontSize: 14,
   },
 });

@@ -51,9 +51,9 @@ describe('BuildingCard', () => {
 
   it('renders notable features', () => {
     render(<BuildingCard building={mockBuilding} />);
-    expect(screen.getByText('Notable Features:')).toBeTruthy();
-    expect(screen.getByText('• Grand lobby')).toBeTruthy();
-    expect(screen.getByText('• Observation deck')).toBeTruthy();
+    expect(screen.getByText('Notable Features')).toBeTruthy();
+    expect(screen.getByText('· Grand lobby')).toBeTruthy();
+    expect(screen.getByText('· Observation deck')).toBeTruthy();
   });
 
   it('renders historical significance', () => {

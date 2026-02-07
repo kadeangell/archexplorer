@@ -6,7 +6,9 @@ import {
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { BuildingCard } from "../src/components";
+import { MapPinIcon } from "phosphor-react-native";
 import type { ArchitecturalDetail } from "../src/types";
+import { colors, fonts, cardStyle } from "../src/theme";
 
 export default function DetailsScreen() {
   const params = useLocalSearchParams<{
@@ -26,6 +28,7 @@ export default function DetailsScreen() {
   if (buildings.length === 0 && !summary) {
     return (
       <View style={styles.emptyContainer}>
+        <MapPinIcon size={48} color={colors.textTertiary} weight="light" />
         <Text style={styles.emptyText}>
           No architectural data available.
         </Text>
@@ -65,60 +68,56 @@ export default function DetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.background,
   },
   content: {
     padding: 16,
   },
   summaryCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
+    ...cardStyle,
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   summaryLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#888",
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textTertiary,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginBottom: 8,
   },
   summaryText: {
+    fontFamily: fonts.body,
     fontSize: 15,
-    color: "#333",
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   buildingsSection: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1a1a1a",
+    fontFamily: fonts.heading,
+    fontSize: 22,
+    color: colors.textPrimary,
+    letterSpacing: 0.2,
     marginBottom: 12,
   },
   emptyContainer: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
+    gap: 12,
   },
   emptyText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 8,
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.textSecondary,
   },
   emptyHint: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: "#888",
+    color: colors.textTertiary,
     textAlign: "center",
   },
 });

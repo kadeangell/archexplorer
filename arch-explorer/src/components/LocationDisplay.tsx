@@ -1,5 +1,8 @@
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { MapPinIcon } from "phosphor-react-native";
 import type { Coordinates } from "../types";
+import { LoadingView } from "./LoadingView";
+import { colors, fonts, cardStyle } from "../theme";
 
 interface LocationDisplayProps {
   coordinates: Coordinates | null;
@@ -13,12 +16,7 @@ export function LocationDisplay({
   error,
 }: LocationDisplayProps) {
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="small" color="#6366f1" />
-        <Text style={styles.loadingText}>Getting location...</Text>
-      </View>
-    );
+    return <LoadingView variant="location" />;
   }
 
   if (error) {
@@ -39,6 +37,7 @@ export function LocationDisplay({
 
   return (
     <View style={styles.container}>
+      <MapPinIcon size={16} color={colors.textTertiary} weight="regular" />
       <Text style={styles.label}>Your Location</Text>
       <Text style={styles.coords}>
         {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
@@ -54,42 +53,37 @@ export function LocationDisplay({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
-    padding: 16,
+    ...cardStyle,
     marginBottom: 16,
     alignItems: "center",
+    gap: 4,
   },
   label: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#888",
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textTertiary,
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 4,
+    letterSpacing: 1.5,
   },
   coords: {
+    fontFamily: fonts.body,
     fontSize: 16,
-    fontWeight: "600",
-    color: "#1a1a1a",
+    color: colors.textPrimary,
     fontVariant: ["tabular-nums"],
   },
   accuracy: {
+    fontFamily: fonts.body,
     fontSize: 12,
-    color: "#888",
-    marginTop: 2,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 8,
+    color: colors.textTertiary,
   },
   errorText: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: "#ef4444",
+    color: colors.error,
   },
   noDataText: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: "#888",
+    color: colors.textTertiary,
   },
 });
