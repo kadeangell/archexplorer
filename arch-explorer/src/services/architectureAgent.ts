@@ -6,6 +6,8 @@ const openai = createOpenAI({
 });
 import { z } from "zod";
 import type { Coordinates, ArchitecturalDetail } from "../types";
+import { queryNearbyBuildings } from "./overpassService";
+import { getWikidataImages } from "./wikidataService";
 
 // Tool: look up buildings near coordinates
 const lookupBuildings = tool({
@@ -20,13 +22,32 @@ const lookupBuildings = tool({
       .describe("Search radius in meters"),
   }),
   execute: async ({ latitude, longitude, radiusMeters }) => {
-    // TODO: Integrate with real data source (OpenStreetMap Overpass API,
-    // Google Places, or similar). For now, return the query parameters
-    // so the LLM uses its own knowledge.
-    return {
-      query: { latitude, longitude, radiusMeters },
-      note: "Using AI knowledge for architectural details. Real API integration pending.",
-    };
+    try {
+      const buildings = await queryNearbyBuildings(latitude, longitude, radiusMeters);
+      const wikidataIds = buildings
+        .map((b) => b.wikidataId)
+        .filter((id): id is string => !!id);
+      const imageMap = await getWikidataImages(wikidataIds);
+
+      return {
+        buildings: buildings.map((b) => ({
+          osmId: b.osmId,
+          name: b.name,
+          lat: b.lat,
+          lon: b.lon,
+          wikidataId: b.wikidataId ?? null,
+          imageUrl: b.wikidataId ? imageMap[b.wikidataId] ?? null : null,
+          tags: b.tags,
+        })),
+        count: buildings.length,
+      };
+    } catch (error) {
+      console.warn("Overpass lookup failed, falling back to AI knowledge:", error);
+      return {
+        query: { latitude, longitude, radiusMeters },
+        note: "Overpass API unavailable. Use your own knowledge for architectural details.",
+      };
+    }
   },
 });
 
@@ -40,12 +61,38 @@ const getBuildingDetails = tool({
     longitude: z.number().describe("Approximate longitude"),
   }),
   execute: async ({ buildingName, latitude, longitude }) => {
-    // TODO: Integrate with real architectural database
-    return {
-      buildingName,
-      location: { latitude, longitude },
-      note: "Using AI knowledge for details. Real API integration pending.",
-    };
+    try {
+      const buildings = await queryNearbyBuildings(latitude, longitude, 200);
+      const match = buildings.find(
+        (b) => b.name.toLowerCase() === buildingName.toLowerCase()
+      );
+      if (match) {
+        const imageMap = match.wikidataId
+          ? await getWikidataImages([match.wikidataId])
+          : {};
+        return {
+          osmId: match.osmId,
+          name: match.name,
+          lat: match.lat,
+          lon: match.lon,
+          wikidataId: match.wikidataId ?? null,
+          imageUrl: match.wikidataId ? imageMap[match.wikidataId] ?? null : null,
+          tags: match.tags,
+        };
+      }
+      return {
+        buildingName,
+        location: { latitude, longitude },
+        note: "Building not found in OpenStreetMap. Use your own knowledge for details.",
+      };
+    } catch (error) {
+      console.warn("Building detail lookup failed:", error);
+      return {
+        buildingName,
+        location: { latitude, longitude },
+        note: "API unavailable. Use your own knowledge for details.",
+      };
+    }
   },
 });
 
@@ -62,6 +109,7 @@ For each building, provide:
 - Name, address, architectural style, year built, architect
 - A brief description and notable features
 - Historical significance
+- imageUrl and wikidataId from the tool results when available
 
 Respond with valid JSON matching this structure:
 {
@@ -76,7 +124,9 @@ Respond with valid JSON matching this structure:
       "description": "Brief description",
       "notableFeatures": ["feature1", "feature2"],
       "historicalSignificance": "Why it matters",
-      "distance": null
+      "distance": null,
+      "imageUrl": "url or null",
+      "wikidataId": "Q-id or null"
     }
   ],
   "summary": "Brief overview of the architectural character of this area"

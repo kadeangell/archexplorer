@@ -7,13 +7,14 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useLocation, useArchitectureAgent } from "../src/hooks";
+import { useLocation, useArchitectureAgent, useNotificationPermissions } from "../src/hooks";
 import { LocationDisplay } from "../src/components";
 
 export default function HomeScreen() {
   const router = useRouter();
   const location = useLocation();
   const architecture = useArchitectureAgent();
+  const notifications = useNotificationPermissions();
 
   const handleExplore = async () => {
     if (!location.coordinates) return;
@@ -63,6 +64,24 @@ export default function HomeScreen() {
             Explore Nearby Architecture
           </Text>
         )}
+      </Pressable>
+
+      <Pressable
+        style={styles.secondaryButton}
+        onPress={notifications.toggleNotifications}
+      >
+        <Text style={styles.secondaryButtonText}>
+          {notifications.notificationsEnabled
+            ? "Disable Notifications"
+            : "Enable Notifications"}
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.secondaryButton}
+        onPress={() => router.push("/camera")}
+      >
+        <Text style={styles.secondaryButtonText}>Analyze Photo</Text>
       </Pressable>
 
       {architecture.error && (
@@ -116,6 +135,19 @@ const styles = StyleSheet.create({
   },
   exploreButtonDisabled: {
     backgroundColor: "#c7c8f9",
+  },
+  secondaryButton: {
+    borderWidth: 2,
+    borderColor: "#6366f1",
+    borderRadius: 12,
+    padding: 14,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  secondaryButtonText: {
+    color: "#6366f1",
+    fontSize: 15,
+    fontWeight: "700",
   },
   exploreButtonText: {
     color: "#fff",

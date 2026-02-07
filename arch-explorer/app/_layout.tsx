@@ -1,3 +1,4 @@
+import "../src/tasks/backgroundLocation";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
@@ -19,6 +20,10 @@ export default function RootLayout() {
         <Stack.Screen
           name="details"
           options={{ title: "Architectural Details" }}
+        />
+        <Stack.Screen
+          name="camera"
+          options={{ title: "Architecture Analyzer" }}
         />
       </Stack>
     </>

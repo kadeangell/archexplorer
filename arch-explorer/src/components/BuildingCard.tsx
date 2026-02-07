@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+import { BuildingImage } from "./BuildingImage";
 import type { ArchitecturalDetail } from "../types";
 
 interface BuildingCardProps {
@@ -8,6 +9,9 @@ interface BuildingCardProps {
 export function BuildingCard({ building }: BuildingCardProps) {
   return (
     <View style={styles.card}>
+      {building.imageUrl && (
+        <BuildingImage imageUrl={building.imageUrl} buildingName={building.name} />
+      )}
       <Text style={styles.name}>{building.name}</Text>
       <Text style={styles.style}>{building.style}</Text>
       <Text style={styles.meta}>
