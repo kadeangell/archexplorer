@@ -1,7 +1,6 @@
 import { queryArchitecture } from '../../src/services/architectureAgent';
 import { generateText } from 'ai';
 
-jest.mock('../../src/services/overpassService');
 jest.mock('../../src/services/wikidataService');
 
 const mockGenerateText = generateText as jest.MockedFunction<typeof generateText>;

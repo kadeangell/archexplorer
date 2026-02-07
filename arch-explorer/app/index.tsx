@@ -6,7 +6,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { BellIcon, BellSlashIcon, CameraIcon, CompassIcon } from "phosphor-react-native";
+import { BellIcon, BellSlashIcon, CameraIcon, CompassIcon, MapTrifoldIcon } from "phosphor-react-native";
 import { useLocation, useArchitectureAgent, useNotificationPermissions } from "../src/hooks";
 import { LocationDisplay, LoadingView } from "../src/components";
 import { colors, fonts, cardStyle, primaryButtonStyle, primaryButtonDisabledStyle, secondaryButtonStyle } from "../src/theme";
@@ -82,6 +82,14 @@ export default function HomeScreen() {
             ? "Disable Notifications"
             : "Enable Notifications"}
         </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.secondaryButton}
+        onPress={() => router.push("/map")}
+      >
+        <MapTrifoldIcon size={18} color={colors.accent} weight="regular" />
+        <Text style={styles.secondaryButtonText}>Explore on Map</Text>
       </Pressable>
 
       <Pressable

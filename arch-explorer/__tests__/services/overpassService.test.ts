@@ -1,8 +1,4 @@
-// The overpass service has a 10s throttle between requests at module level.
-// Set a generous timeout for all tests in this file.
-jest.setTimeout(30000);
-
-import { queryNearbyBuildings } from '../../src/services/overpassService';
+import { queryNearbyBuildingsWikidata } from '../../src/services/wikidataService';
 
 // Mock global fetch
 const mockFetch = jest.fn();
@@ -12,40 +8,96 @@ beforeEach(() => {
   mockFetch.mockClear();
 });
 
-describe('queryNearbyBuildings', () => {
-  it('returns parsed buildings from Overpass API', async () => {
+describe('queryNearbyBuildingsWikidata', () => {
+  it('returns parsed buildings from Wikidata SPARQL', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      status: 200,
       json: () =>
         Promise.resolve({
-          elements: [
-            {
-              id: 12345,
-              tags: { name: 'Test Building', building: 'yes', wikidata: 'Q999' },
-              center: { lat: 40.7128, lon: -74.006 },
-            },
-            {
-              id: 67890,
-              tags: { name: 'Another Building', building: 'yes' },
-              center: { lat: 40.7129, lon: -74.007 },
-            },
-          ],
+          results: {
+            bindings: [
+              {
+                building: { value: 'http://www.wikidata.org/entity/Q9188' },
+                buildingLabel: { value: 'Empire State Building' },
+                coord: { value: 'Point(-73.9857 40.7484)' },
+                styleLabel: { value: 'Art Deco' },
+                architectLabel: { value: 'Shreve, Lamb & Harmon' },
+                inception: { value: '1931-01-01T00:00:00Z' },
+                image: {
+                  value: 'http://commons.wikimedia.org/wiki/Special:FilePath/Empire_State_Building.jpg',
+                },
+                floors: { value: '102' },
+              },
+            ],
+          },
         }),
     });
 
-    const result = await queryNearbyBuildings(40.7128, -74.006, 300);
+    const result = await queryNearbyBuildingsWikidata(40.7484, -73.9857);
 
-    expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({
-      osmId: '12345',
-      name: 'Test Building',
-      lat: 40.7128,
-      lon: -74.006,
-      wikidataId: 'Q999',
-      tags: { name: 'Test Building', building: 'yes', wikidata: 'Q999' },
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      wikidataId: 'Q9188',
+      name: 'Empire State Building',
+      style: 'Art Deco',
+      architect: 'Shreve, Lamb & Harmon',
+      yearBuilt: '1931',
+      floors: 102,
     });
-    expect(result[1].wikidataId).toBeUndefined();
+    expect(result[0].imageUrl).toContain('commons.wikimedia.org');
+    expect(result[0].lat).toBeCloseTo(40.7484);
+    expect(result[0].lon).toBeCloseTo(-73.9857);
+  });
+
+  it('deduplicates buildings by Q-id', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          results: {
+            bindings: [
+              {
+                building: { value: 'http://www.wikidata.org/entity/Q9188' },
+                buildingLabel: { value: 'Empire State Building' },
+                coord: { value: 'Point(-73.9857 40.7484)' },
+                styleLabel: { value: 'Art Deco' },
+              },
+              {
+                building: { value: 'http://www.wikidata.org/entity/Q9188' },
+                buildingLabel: { value: 'Empire State Building' },
+                coord: { value: 'Point(-73.9857 40.7484)' },
+                styleLabel: { value: 'Streamline Moderne' },
+              },
+            ],
+          },
+        }),
+    });
+
+    const result = await queryNearbyBuildingsWikidata(40.7484, -73.9857);
+
+    expect(result).toHaveLength(1);
+  });
+
+  it('skips items with no English label', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          results: {
+            bindings: [
+              {
+                building: { value: 'http://www.wikidata.org/entity/Q12345' },
+                buildingLabel: { value: 'Q12345' },
+                coord: { value: 'Point(-74.0 40.7)' },
+              },
+            ],
+          },
+        }),
+    });
+
+    const result = await queryNearbyBuildingsWikidata(40.7, -74.0);
+
+    expect(result).toHaveLength(0);
   });
 
   it('returns empty array on non-OK response', async () => {
@@ -54,40 +106,44 @@ describe('queryNearbyBuildings', () => {
       status: 500,
     });
 
-    const result = await queryNearbyBuildings(40.7128, -74.006, 300);
+    const result = await queryNearbyBuildingsWikidata(40.7128, -74.006);
 
     expect(result).toEqual([]);
   });
 
-  it('filters elements without name or center', async () => {
+  it('returns empty array on network error', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+    const result = await queryNearbyBuildingsWikidata(40.7128, -74.006);
+
+    expect(result).toEqual([]);
+  });
+
+  it('handles missing optional fields gracefully', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      status: 200,
       json: () =>
         Promise.resolve({
-          elements: [
-            {
-              id: 1,
-              tags: { building: 'yes' }, // no name
-              center: { lat: 40.7, lon: -74.0 },
-            },
-            {
-              id: 2,
-              tags: { name: 'Good Building', building: 'yes' },
-              // no center
-            },
-            {
-              id: 3,
-              tags: { name: 'Valid Building', building: 'yes' },
-              center: { lat: 40.71, lon: -74.01 },
-            },
-          ],
+          results: {
+            bindings: [
+              {
+                building: { value: 'http://www.wikidata.org/entity/Q555' },
+                buildingLabel: { value: 'Simple Building' },
+                coord: { value: 'Point(-74.0 40.7)' },
+              },
+            ],
+          },
         }),
     });
 
-    const result = await queryNearbyBuildings(40.7128, -74.006, 300);
+    const result = await queryNearbyBuildingsWikidata(40.7, -74.0);
 
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Valid Building');
+    expect(result[0].name).toBe('Simple Building');
+    expect(result[0].style).toBeUndefined();
+    expect(result[0].architect).toBeUndefined();
+    expect(result[0].yearBuilt).toBeUndefined();
+    expect(result[0].imageUrl).toBeUndefined();
+    expect(result[0].floors).toBeUndefined();
   });
 });

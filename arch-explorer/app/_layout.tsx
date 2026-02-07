@@ -96,6 +96,10 @@ export default function RootLayout() {
           name="camera"
           options={{ title: "Architecture Analyzer" }}
         />
+        <Stack.Screen
+          name="map"
+          options={{ title: "Explore Map" }}
+        />
       </Stack>
     </>
   );

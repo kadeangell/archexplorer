@@ -6,55 +6,55 @@ const openai = createOpenAI({
 });
 import { z } from "zod";
 import type { Coordinates, ArchitecturalDetail } from "../types";
-import { queryNearbyBuildings } from "./overpassService";
-import { getWikidataImages } from "./wikidataService";
+import { queryNearbyBuildingsWikidata } from "./wikidataService";
 
-// Tool: look up buildings near coordinates
+// Tool: look up buildings near coordinates via Wikidata SPARQL
 const lookupBuildings = tool({
   description:
-    "Look up notable buildings and architectural landmarks near the given GPS coordinates. Returns information about nearby structures.",
+    "Look up notable buildings and architectural landmarks near the given GPS coordinates using Wikidata. Returns structured architectural data including styles, architects, images, and heritage status.",
   inputSchema: z.object({
     latitude: z.number().describe("Latitude of the location"),
     longitude: z.number().describe("Longitude of the location"),
-    radiusMeters: z
+    radiusKm: z
       .number()
-      .default(500)
-      .describe("Search radius in meters"),
+      .default(0.5)
+      .describe("Search radius in kilometers"),
   }),
-  execute: async ({ latitude, longitude, radiusMeters }) => {
+  execute: async ({ latitude, longitude, radiusKm }) => {
     try {
-      const buildings = await queryNearbyBuildings(latitude, longitude, radiusMeters);
-      const wikidataIds = buildings
-        .map((b) => b.wikidataId)
-        .filter((id): id is string => !!id);
-      const imageMap = await getWikidataImages(wikidataIds);
+      const buildings = await queryNearbyBuildingsWikidata(latitude, longitude, radiusKm);
 
       return {
         buildings: buildings.map((b) => ({
-          osmId: b.osmId,
+          wikidataId: b.wikidataId,
           name: b.name,
           lat: b.lat,
           lon: b.lon,
-          wikidataId: b.wikidataId ?? null,
-          imageUrl: b.wikidataId ? imageMap[b.wikidataId] ?? null : null,
-          tags: b.tags,
+          style: b.style ?? null,
+          architect: b.architect ?? null,
+          yearBuilt: b.yearBuilt ?? null,
+          imageUrl: b.imageUrl ?? null,
+          floors: b.floors ?? null,
+          height: b.height ?? null,
+          heritageStatus: b.heritageStatus ?? null,
         })),
         count: buildings.length,
+        source: "wikidata",
       };
     } catch (error) {
-      console.warn("Overpass lookup failed, falling back to AI knowledge:", error);
+      console.warn("Wikidata lookup failed, falling back to AI knowledge:", error);
       return {
-        query: { latitude, longitude, radiusMeters },
-        note: "Overpass API unavailable. Use your own knowledge for architectural details.",
+        query: { latitude, longitude, radiusKm },
+        note: "Wikidata API unavailable. Use your own knowledge for architectural details.",
       };
     }
   },
 });
 
-// Tool: get detailed info about a specific building
+// Tool: get detailed info about a specific building by searching Wikidata
 const getBuildingDetails = tool({
   description:
-    "Get detailed architectural information about a specific building by name and location.",
+    "Get detailed architectural information about a specific building by name and location from Wikidata.",
   inputSchema: z.object({
     buildingName: z.string().describe("Name of the building"),
     latitude: z.number().describe("Approximate latitude"),
@@ -62,28 +62,31 @@ const getBuildingDetails = tool({
   }),
   execute: async ({ buildingName, latitude, longitude }) => {
     try {
-      const buildings = await queryNearbyBuildings(latitude, longitude, 200);
+      const buildings = await queryNearbyBuildingsWikidata(latitude, longitude, 0.3);
       const match = buildings.find(
-        (b) => b.name.toLowerCase() === buildingName.toLowerCase()
+        (b) => b.name.toLowerCase().includes(buildingName.toLowerCase()) ||
+          buildingName.toLowerCase().includes(b.name.toLowerCase()),
       );
       if (match) {
-        const imageMap = match.wikidataId
-          ? await getWikidataImages([match.wikidataId])
-          : {};
         return {
-          osmId: match.osmId,
+          wikidataId: match.wikidataId,
           name: match.name,
           lat: match.lat,
           lon: match.lon,
-          wikidataId: match.wikidataId ?? null,
-          imageUrl: match.wikidataId ? imageMap[match.wikidataId] ?? null : null,
-          tags: match.tags,
+          style: match.style ?? null,
+          architect: match.architect ?? null,
+          yearBuilt: match.yearBuilt ?? null,
+          imageUrl: match.imageUrl ?? null,
+          floors: match.floors ?? null,
+          height: match.height ?? null,
+          heritageStatus: match.heritageStatus ?? null,
+          source: "wikidata",
         };
       }
       return {
         buildingName,
         location: { latitude, longitude },
-        note: "Building not found in OpenStreetMap. Use your own knowledge for details.",
+        note: "Building not found in Wikidata. Use your own knowledge for details.",
       };
     } catch (error) {
       console.warn("Building detail lookup failed:", error);
@@ -97,7 +100,7 @@ const getBuildingDetails = tool({
 });
 
 export async function queryArchitecture(
-  coords: Coordinates
+  coords: Coordinates,
 ): Promise<{ buildings: ArchitecturalDetail[]; summary: string }> {
   const { text } = await generateText({
     model: openai("gpt-4o"),
